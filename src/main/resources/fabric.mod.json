@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "anti-air-place",
+  "version": "${version}",
+  "name": "Anti Air Place",
+  "description": "serverside mod aimed to block litematica airplace",
+  "authors": [
+    "IIpho3nix"
+  ],
+  "contact": {},
+  "license": "GPL-3.0",
+  "icon": "assets/anti-air-place/icon.png",
+  "environment": "server",
+  "entrypoints": {
+    "main": [
+      "me.iipho3nix.antiairplace.AntiAirPlace"
+    ]
+  },
+  "mixins": [
+    "anti-air-place.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}

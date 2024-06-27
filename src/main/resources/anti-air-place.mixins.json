@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "me.iipho3nix.antiairplace.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "BlockPlaceMixin"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
