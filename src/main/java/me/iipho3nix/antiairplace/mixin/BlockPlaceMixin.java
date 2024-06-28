@@ -32,7 +32,7 @@ public abstract class BlockPlaceMixin {
         BlockState west = world.getBlockState(pos.west());
         BlockState east = world.getBlockState(pos.east());
 
-        if (!up.isAir() || !down.isAir() || !north.isAir() || !south.isAir() || !east.isAir() || !west.isAir()) {
+        if (up.isSolid() || down.isSolid() || north.isSolid() || south.isSolid() || east.isSolid() || west.isSolid()) {
             cancelled = false;
         }
 
