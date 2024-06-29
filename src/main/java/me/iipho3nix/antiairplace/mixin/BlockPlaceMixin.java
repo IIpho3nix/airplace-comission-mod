@@ -18,8 +18,6 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(BlockItem.class)
 public abstract class BlockPlaceMixin {
-    @Shadow public abstract boolean canBeNested();
-
     @Inject(method = "place(Lnet/minecraft/item/ItemPlacementContext;Lnet/minecraft/block/BlockState;)Z", at = @At("HEAD"), locals = LocalCapture.CAPTURE_FAILHARD, cancellable = true)
     private void placeBlock(ItemPlacementContext context, BlockState state, CallbackInfoReturnable<Boolean> cir) {
         boolean cancelled = true;
@@ -32,7 +30,7 @@ public abstract class BlockPlaceMixin {
         BlockState west = world.getBlockState(pos.west());
         BlockState east = world.getBlockState(pos.east());
 
-        if (up.isSolid() || down.isSolid() || north.isSolid() || south.isSolid() || east.isSolid() || west.isSolid()) {
+        if (!airOrFluid(up) || !airOrFluid(down) || !airOrFluid(north) || !airOrFluid(south) || !airOrFluid(east) || !airOrFluid(west)) {
             cancelled = false;
         }
 
@@ -70,5 +68,13 @@ public abstract class BlockPlaceMixin {
                 }
             }
         }
+    }
+
+    private boolean isFluid(BlockState state) {
+        return !state.getFluidState().isEmpty();
+    }
+
+    private boolean airOrFluid(BlockState state) {
+        return state.isAir() || isFluid(state);
     }
 }
