@@ -19,9 +19,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 
 @Mixin(BlockItem.class)
 public abstract class BlockPlaceMixin {
