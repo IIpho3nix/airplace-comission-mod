@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,19 +24,28 @@ public class AntiAirPlace implements ModInitializer {
     @Override
     public void onInitialize() {
         boolean createConfig = false;
-        if (!configFolder.exists()) {
-            configFolder.mkdir();
-            createConfig = true;
-        }
-        if (!configFile.exists()) {
-            try {
-                configFile.createNewFile();
-            } catch (Exception e) {
-                e.printStackTrace();
+        // try creating config folder
+        try {
+            if (configFolder.mkdir()) {
+                logger.info("Created new folder '{}'", configFolder.getName());
+                createConfig = true;
             }
-            createConfig = true;
+        } catch (SecurityException e) {
+            logger.error("Failed to create '{}', lacking filesystem permissions.", configFolder.getName());
+        }
+        // try creating config file
+        try {
+            if (configFile.createNewFile()) {
+                logger.info("Created new file '{}'", configFile.getName());
+                createConfig = true;
+            }
+        } catch (SecurityException e) {
+            logger.error("Failed to create '{}', lacking filesystem permissions.", configFile.getName());
+        } catch (IOException e) {
+            logger.error("Error creating '{}': {}", configFile.getName(), e.getCause().toString());
         }
 
+        // add data fields to config file on creation
         dataManager = new DataManager(configFile);
         if(createConfig) {
             dataManager.addData(new Data("Warnings-Enabled", true));
@@ -51,23 +60,43 @@ public class AntiAirPlace implements ModInitializer {
             dataManager.addData(new Data("Admin-Message", "§c${player} has used Airplace!"));
             dataManager.addData(new Data("Notify-Admins-Of-Ban", true));
             dataManager.addData(new Data("Admin-Message-Of-Ban", "§c${player} has been banned for using Airplace!"));
-            List<Data> list = new ArrayList<>();
-            list.add(new Data("0", UUID.randomUUID().toString()));
-            list.add(new Data("1", UUID.randomUUID().toString()));
-            list.add(new Data("2", UUID.randomUUID().toString()));
-            list.add(new Data("3", UUID.randomUUID().toString()));
-            dataManager.addData(new Data("Admins", list));
+            dataManager.addData(new Data(
+                "Fluid-Place-Whitelist",
+                List.of(
+                    new Data("0", "minecraft:lily_pad"),
+                    new Data("1", "minecraft:frogspawn"),
+                    new Data("2", "wilderwild:small_lily_pad"),
+                    new Data("3", "wilderwild:flowering_lily_pad"),
+                    new Data("4", "wilderwild:water_lily")
+                )
+            ));
+            dataManager.addData(new Data(
+                "Admins",
+                List.of(
+                    new Data("0", UUID.randomUUID().toString()),
+                    new Data("1", UUID.randomUUID().toString()),
+                    new Data("2", UUID.randomUUID().toString()),
+                    new Data("3", UUID.randomUUID().toString())
+                )
+            ));
+
             dataManager.saveData();
         }
+        // load data into config file
         dataManager.loadData();
 
-        if(!warningsFile.exists()) {
-            try {
-                warningsFile.createNewFile();
-            } catch (Exception e) {
-                e.printStackTrace();
+        // try creating warnings file
+        try {
+            if (warningsFile.createNewFile()) {
+                logger.info("Created new file '{}'", warningsFile.getName());
             }
+        } catch (SecurityException e) {
+            logger.error("Failed to create '{}', lacking filesystem permissions.", warningsFile.getName());
+        } catch (IOException e) {
+            logger.error("Error creating '{}': {}", warningsFile.getName(), e.getCause().toString());
         }
+
+        // load data into warnings file
         warningsDataManager = new DataManager(warningsFile);
         warningsDataManager.loadData();
 

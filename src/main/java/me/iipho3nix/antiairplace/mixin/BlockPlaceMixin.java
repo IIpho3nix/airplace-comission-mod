@@ -3,18 +3,23 @@ package me.iipho3nix.antiairplace.mixin;
 import me.iipho3nix.antiairplace.AntiAirPlace;
 import me.iipho3nix.antiairplace.BanManager;
 import me.iipho3nix.antiairplace.NotificationManager;
+import me.iipho3nix.datamanager.Data;
 import net.minecraft.block.BlockState;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemPlacementContext;
+import net.minecraft.state.property.Properties;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+
+import java.util.List;
 
 @Mixin(BlockItem.class)
 public abstract class BlockPlaceMixin {
@@ -30,7 +35,8 @@ public abstract class BlockPlaceMixin {
         BlockState west = world.getBlockState(pos.west());
         BlockState east = world.getBlockState(pos.east());
 
-        if (!airOrFluid(up) || !airOrFluid(down) || !airOrFluid(north) || !airOrFluid(south) || !airOrFluid(east) || !airOrFluid(west)) {
+        // down check done last due to it being the most complex check
+        if (!airOrFluid(up) || !airOrFluid(north) || !airOrFluid(south) || !airOrFluid(east) || !airOrFluid(west) || !airOrFluidComplex(down)) {
             cancelled = false;
         }
 
@@ -70,11 +76,33 @@ public abstract class BlockPlaceMixin {
         }
     }
 
+    @Unique
     private boolean isFluid(BlockState state) {
-        return !state.getFluidState().isEmpty();
+        return !state.getFluidState().isEmpty() && !state.getOrEmpty(Properties.WATERLOGGED).orElse(false);
     }
 
+    @Unique
+    private boolean isFluidComplex(BlockState state) {
+        // check for fluid block conditions (contains fluid and is not waterlogged block)
+        if (!state.getFluidState().isEmpty() && !state.getOrEmpty(Properties.WATERLOGGED).orElse(false)) {
+            // if placed block is whitelisted, ignore fluid check
+            List<Data> whitelist = (List<Data>) AntiAirPlace.dataManager.getData("Fluid-Place-Whitelist").getData();
+            for (Data string_id : whitelist) {
+                Identifier id = Identifier.tryParse((String) string_id.getData());
+                if (id != null) { return false; }
+            }
+            // else, block is fluid
+            return true;
+        }
+        // block is not fluid
+        return false;
+    }
+
+    @Unique
     private boolean airOrFluid(BlockState state) {
         return state.isAir() || isFluid(state);
     }
+
+    @Unique
+    private boolean airOrFluidComplex(BlockState state) { return state.isAir() || isFluidComplex(state); }
 }
